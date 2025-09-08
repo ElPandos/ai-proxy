@@ -1,4 +1,5 @@
 import logging
+import time
 
 from src.app import App
 
@@ -60,5 +61,23 @@ logging.basicConfig(
 if __name__ in {"__main__", "__mp_main__"}:
     try:
         app = App()
+        app.run()
+        app.update()
+        app.terminate()
+        app.run()
+
+        HEARTBEAT_INTERVAL_SECONDS = 10  # seconds between log‑heartbeats
+        RETRY_DELAY_SECONDS = 3
+        while True:
+            try:
+                logging.info(f"Proxy setup heartbeat each {HEARTBEAT_INTERVAL_SECONDS} sec. ['Ctrl+c' to Exit/Stop]")
+                time.sleep(HEARTBEAT_INTERVAL_SECONDS)
+            except KeyboardInterrupt:
+                logging.info(f"User pressed 'Ctrl+c' - Exiting")
+                app.terminate_all()
+                break
+
+        logging.info("Application finished.")
+
     except Exception as e:
         logging.error(f"Error: {e}")

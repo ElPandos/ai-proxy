@@ -2,11 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
+from subprocess import Popen
 
 from dotenv import load_dotenv
 
 from src.gather_templates import GatherTemplates
 from src.merge_templates import MergeTemplates
+from src.process_manager import ProcessManager
 
 
 class App:
@@ -26,27 +28,6 @@ class App:
 
         self.__litellm_main_template_file = os.getenv("LITELLM_TEMPLATE_FILE")
         self.__verify_file_exists(self.__litellm_main_template_file)
-
-        self.__gatherer(
-            os.getenv("ENV_DUMMY_API_KEY"),
-            os.getenv("LMSTUDIO_API_BASE_URL"),
-            os.getenv("LMSTUDIO_LITELLM_PROVIDER"),
-            os.getenv("LMSTUDIO_FILTER"),
-        )
-        self.__GatherTemplates(
-            os.getenv("ENV_DUMMY_API_KEY"),
-            os.getenv("ERICAI_API_BASE_URL"),
-            os.getenv("ERICAI_LITELLM_PROVIDER"),
-            os.getenv("ERICAI_FILTER"),
-        )
-        self.__GatherTemplates(
-            os.getenv("ENV_OPENROUTER_API_KEY"),
-            os.getenv("OPENROUTER_API_BASE_URL"),
-            os.getenv("OPENROUTER_LITELLM_PROVIDER"),
-            os.getenv("OPENROUTER_FILTER"),
-        )
-
-        self.__merger()
 
     def __verify_folder_exists(self, folder: str) -> None:
         path = Path(folder).resolve()
@@ -111,3 +92,32 @@ class App:
             print(f"Created configuration file: {self.__litellm_output_file}\n")
         except Exception as e:
             logging.error(f"Error: {str(e)}")
+
+    def run(self) -> None:
+        self.__process_manager = ProcessManager()
+        self.__process_manager.run(self.__litellm_output_folder_path, self.__litellm_output_file)
+
+    def update(self) -> None:
+        self.__gatherer(
+            os.getenv("ENV_DUMMY_API_KEY"),
+            os.getenv("LMSTUDIO_API_BASE_URL"),
+            os.getenv("LMSTUDIO_LITELLM_PROVIDER"),
+            os.getenv("LMSTUDIO_FILTER"),
+        )
+        self.__GatherTemplates(
+            os.getenv("ENV_DUMMY_API_KEY"),
+            os.getenv("ERICAI_API_BASE_URL"),
+            os.getenv("ERICAI_LITELLM_PROVIDER"),
+            os.getenv("ERICAI_FILTER"),
+        )
+        self.__GatherTemplates(
+            os.getenv("ENV_OPENROUTER_API_KEY"),
+            os.getenv("OPENROUTER_API_BASE_URL"),
+            os.getenv("OPENROUTER_LITELLM_PROVIDER"),
+            os.getenv("OPENROUTER_FILTER"),
+        )
+
+        self.__merger()
+
+    def terminate_all(self) -> None:
+        self.__process_manager.terminate_all()
